@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context=".TransmitActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Welcome to the Transmitting Screen!"
+        android:id="@+id/transmit_welcome"
+        android:textSize="30dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:textIsSelectable="false"
+        android:gravity="center"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Click to start transmitting"
+        android:id="@+id/transmit_display"
+        android:layout_marginTop="45dp"
+        android:layout_below="@+id/transmit_welcome"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Transmit"
+        android:id="@+id/transmit_btn"
+        android:onClick="transmitClicked"
+        android:layout_marginTop="36dp"
+        android:layout_below="@+id/transmit_display"
+        android:layout_alignStart="@+id/transmit_display"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:id="@+id/stop_transmit_btn"
+        android:onClick="stopClicked"
+        android:layout_alignTop="@+id/transmit_btn"
+        android:layout_toEndOf="@+id/transmit_btn"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/transmit_log"
+        android:layout_below="@+id/transmit_btn"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear"
+        android:id="@+id/transmit_clr_btn"
+        android:onClick="clearClicked"
+        android:layout_alignTop="@+id/stop_transmit_btn"
+        android:layout_toEndOf="@+id/stop_transmit_btn"/>
+
+</RelativeLayout>
