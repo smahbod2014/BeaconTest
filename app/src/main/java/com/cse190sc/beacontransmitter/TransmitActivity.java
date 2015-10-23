@@ -32,17 +32,13 @@ public class TransmitActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transmit);
 
-        //BeaconParser parser = new AltBeaconParser();
-        BeaconParser parser = new BeaconParser()
-                .setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25");
+        BeaconParser parser = new AltBeaconParser();
+        //BeaconParser parser = new BeaconParser()
+               // setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25");
         m_Transmitter = new BeaconTransmitter(this, parser);
         m_Transmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
         m_Transmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
 
-        List<Long> dataFields = new ArrayList<>();
-        //this is our payload if we want to send some code.
-        //we can only have ONE one-byte number, so yeah.
-        dataFields.add(255l);
 
         AltBeacon.Builder builder = new AltBeacon.Builder();
         builder.setId1("2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6");
@@ -51,7 +47,6 @@ public class TransmitActivity extends AppCompatActivity {
         //builder.setMfgReserved(3);
         builder.setManufacturer(0);
         builder.setTxPower(-59);
-        builder.setDataFields(dataFields);
         m_Transmitter.setBeacon(builder.build());
 
         m_Log = (TextView) findViewById(R.id.transmit_log);
