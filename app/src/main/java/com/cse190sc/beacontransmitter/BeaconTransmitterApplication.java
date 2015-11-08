@@ -4,14 +4,22 @@ import android.app.Application;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
+import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import org.altbeacon.beacon.AltBeacon;
+import org.altbeacon.beacon.AltBeaconParser;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.BeaconTransmitter;
 import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
@@ -29,7 +37,9 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     private BackgroundPowerSaver m_PowerSaver;
     private BeaconManager m_BeaconManager;
     private boolean m_InsideActivity;
-    private boolean m_AlreadySeenABeacon;
+
+    //transmitter stuff
+    private BeaconTransmitter m_Transmitter;
 
     @Override
     public void onCreate() {
@@ -49,8 +59,6 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
             }
         });
 
-
-
         //wake up the app when any beacon is seen
         //startBackgroundMonitoring();
         //m_PowerSaver = new BackgroundPowerSaver(this);
@@ -58,33 +66,32 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         Region region = new Region("com.cse190sc.BeaconTransmitter", Identifier.parse(ALTBEACON_ID), null, null);
         m_RegionBootstrap = new RegionBootstrap(this, region);
         m_PowerSaver = new BackgroundPowerSaver(this);
-        m_AlreadySeenABeacon = false;
+
+        //transmitter setup
+        BeaconParser parser = new AltBeaconParser();
+        //BeaconParser parser = new BeaconParser()
+        // setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25");
+        m_Transmitter = new BeaconTransmitter(this, parser);
+        m_Transmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
+        m_Transmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
+
+
+        AltBeacon.Builder builder = new AltBeacon.Builder();
+        builder.setId1("2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6");
+        builder.setId2("JOJO");
+        builder.setId3("DIO");
+        //builder.setMfgReserved(3);
+        builder.setManufacturer(0);
+        builder.setTxPower(-59);
+        m_Transmitter.setBeacon(builder.build());
+
+        startTransmitting();
     }
 
 
 
     @Override
     public void didEnterRegion(Region region) {
-        /*if (!m_AlreadySeenABeacon) {
-            Log.d(TAG, "Got in range of a beacon...");
-            m_AlreadySeenABeacon = true;
-
-
-            //if the user is not in this app, send a notification
-            if (!m_InsideActivity) {
-                Log.i(TAG, "LaunchActivity is not visible, sending notification");
-                createNotification();
-            }
-            else {
-                Log.i(TAG, "LaunchActivity is visible, NOT sending notification");
-            }
-
-            //this call will make it so the notification only appears once until the app is relaunched
-            //however, there doesn't seem to be an enable() function, so I would try and avoid this
-            //function if possible
-            //m_RegionBootstrap.disable();
-        }*/
-
         Log.d(TAG, "I see a beacon!");
         try {
             m_BeaconManager.startRangingBeaconsInRegion(region);
@@ -106,7 +113,6 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     @Override
     public void didExitRegion(Region region) {
         Log.d(TAG, "Went out of range of beacon with Id2 = " + region.getId2());
-        m_AlreadySeenABeacon = false;
     }
 
     @Override
@@ -159,4 +165,19 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
                 (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(1, builder.build());
     }
+
+    public void startTransmitting() {
+        if (!m_Transmitter.isStarted()) {
+            m_Transmitter.startAdvertising();
+            Toast.makeText(this, "Started transmitting", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void stopTransmitting() {
+        if (m_Transmitter.isStarted()) {
+            m_Transmitter.stopAdvertising();
+            Toast.makeText(this, "Stopped transmitting", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }

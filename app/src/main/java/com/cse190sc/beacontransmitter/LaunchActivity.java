@@ -3,6 +3,7 @@ package com.cse190sc.beacontransmitter;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -31,7 +32,6 @@ public class LaunchActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private BeaconTransmitterApplication m_Application;
     private BeaconTransmitter m_Transmitter;
-    private Switch transSwitch;
     private SharedPreferences m_Prefs;
 
     @Override
@@ -51,58 +51,7 @@ public class LaunchActivity extends AppCompatActivity {
             Log.d(TAG, "Opened app manually");
         }
 
-        transSwitch = (Switch) findViewById(R.id.launch_trans_switch);
-        Switch scanSwitch = (Switch) findViewById(R.id.launch_scan_switch);
 
-        //transSwitch.setChecked(m_Prefs.getBoolean("transSwitch", false));
-        //scanSwitch.setChecked(m_Prefs.getBoolean("scanSwitch", false));
-
-        transSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    BeaconParser parser = new AltBeaconParser();
-                    //BeaconParser parser = new BeaconParser()
-                    // setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25");
-                    m_Transmitter = new BeaconTransmitter(LaunchActivity.this, parser);
-                    m_Transmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
-                    m_Transmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
-
-
-                    AltBeacon.Builder builder = new AltBeacon.Builder();
-                    builder.setId1("2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6");
-                    builder.setId2("1");
-                    builder.setId3("2");
-                    //builder.setMfgReserved(3);
-                    builder.setManufacturer(0);
-                    builder.setTxPower(-59);
-                    m_Transmitter.setBeacon(builder.build());
-                    m_Transmitter.startAdvertising();
-                }
-                else {
-                    m_Transmitter.stopAdvertising();
-                }
-
-                //m_Prefs.edit().putBoolean("transSwitch", isChecked).commit();
-            }
-        });
-
-        scanSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    doPermissionChecks();
-                    m_Application.startBackgroundMonitoring();
-                    Toast.makeText(LaunchActivity.this, "Scanning on...", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    m_Application.stopBackgroundMonitoring();
-                    Toast.makeText(LaunchActivity.this, "Scanning off...", Toast.LENGTH_SHORT).show();
-                }
-
-                //m_Prefs.edit().putBoolean("scanSwitch", isChecked).apply();
-            }
-        });
     }
 
     @Override
@@ -110,8 +59,6 @@ public class LaunchActivity extends AppCompatActivity {
         super.onPause();
         Log.i(TAG, "onPause()");
         m_Application.setInsideActivity(false);
-        if (m_Transmitter != null && m_Transmitter.isStarted())
-            m_Transmitter.stopAdvertising();
     }
 
     @Override
@@ -119,9 +66,6 @@ public class LaunchActivity extends AppCompatActivity {
         super.onResume();
         Log.i(TAG, "onResume()");
         m_Application.setInsideActivity(true);
-        if (m_Transmitter != null && transSwitch.isChecked() && !m_Transmitter.isStarted()) {
-            m_Transmitter.startAdvertising();
-        }
     }
 
     private void doPermissionChecks() {
@@ -163,5 +107,83 @@ public class LaunchActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "LaunchActivity destroyed");
+    }
+
+    //simply checks whether your device can transmit as a beacon
+    @TargetApi(21)
+    private boolean checkPrerequisites() {
+
+        if (android.os.Build.VERSION.SDK_INT < 18) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth LE not supported by this device's operating system");
+            builder.setMessage("You will not be able to transmit as a Beacon");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    finish();
+                }
+
+            });
+            builder.show();
+            return false;
+        }
+        if (!getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth LE not supported by this device");
+            builder.setMessage("You will not be able to transmit as a Beacon");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    finish();
+                }
+
+            });
+            builder.show();
+            return false;
+        }
+        if (!((BluetoothManager) getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter().isEnabled()){
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth not enabled");
+            builder.setMessage("Please enable Bluetooth and restart this app.");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    finish();
+                }
+
+            });
+            builder.show();
+            return false;
+
+        }
+
+        try {
+            // Check to see if the getBluetoothLeAdvertiser is available.  If not, this will throw an exception indicating we are not running Android L
+            ((BluetoothManager) this.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter().getBluetoothLeAdvertiser();
+        }
+        catch (Exception e) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth LE advertising unavailable");
+            builder.setMessage("Sorry, the operating system on this device does not support Bluetooth LE advertising.  As of July 2014, only the Android L preview OS supports this feature in user-installed apps.");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    finish();
+                }
+
+            });
+            builder.show();
+            return false;
+
+        }
+
+        return true;
     }
 }
