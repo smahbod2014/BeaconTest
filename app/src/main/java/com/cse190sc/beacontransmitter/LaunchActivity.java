@@ -55,7 +55,7 @@ public class LaunchActivity extends AppCompatActivity {
         Switch scanSwitch = (Switch) findViewById(R.id.launch_scan_switch);
 
         //transSwitch.setChecked(m_Prefs.getBoolean("transSwitch", false));
-        scanSwitch.setChecked(m_Prefs.getBoolean("scanSwitch", false));
+        //scanSwitch.setChecked(m_Prefs.getBoolean("scanSwitch", false));
 
         transSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -100,7 +100,7 @@ public class LaunchActivity extends AppCompatActivity {
                     Toast.makeText(LaunchActivity.this, "Scanning off...", Toast.LENGTH_SHORT).show();
                 }
 
-                m_Prefs.edit().putBoolean("scanSwitch", isChecked).apply();
+                //m_Prefs.edit().putBoolean("scanSwitch", isChecked).apply();
             }
         });
     }
@@ -108,6 +108,7 @@ public class LaunchActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        Log.i(TAG, "onPause()");
         m_Application.setInsideActivity(false);
         if (m_Transmitter != null && m_Transmitter.isStarted())
             m_Transmitter.stopAdvertising();
@@ -116,6 +117,7 @@ public class LaunchActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.i(TAG, "onResume()");
         m_Application.setInsideActivity(true);
         if (m_Transmitter != null && transSwitch.isChecked() && !m_Transmitter.isStarted()) {
             m_Transmitter.startAdvertising();
@@ -155,5 +157,11 @@ public class LaunchActivity extends AppCompatActivity {
                 //inform the user here that they will not be able to use the app properly
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "LaunchActivity destroyed");
     }
 }
