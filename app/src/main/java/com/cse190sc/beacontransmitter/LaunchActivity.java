@@ -28,6 +28,7 @@ import org.altbeacon.beacon.BeaconTransmitter;
 import org.w3c.dom.Text;
 
 import java.util.Arrays;
+import java.util.Random;
 
 public class LaunchActivity extends AppCompatActivity {
 
@@ -59,6 +60,36 @@ public class LaunchActivity extends AppCompatActivity {
             Log.d(TAG, "Opened app manually");
         }
 
+        Switch transmitSwitch = (Switch) findViewById(R.id.transmit_switch);
+        transmitSwitch.setChecked(m_Prefs.getBoolean("transmitSwitch", false));
+        transmitSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    startTransmitting();
+                }
+                else {
+                    stopTransmitting();
+                }
+                m_Prefs.edit().putBoolean("transmitSwitch", isChecked).apply();
+            }
+        });
+
+        Switch scanSwitch = (Switch) findViewById(R.id.scan_switch);
+        scanSwitch.setChecked(m_Prefs.getBoolean("scanSwitch", false));
+        scanSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    startScanning();
+                }
+                else {
+                    stopScanning();
+                }
+                m_Prefs.edit().putBoolean("scanSwitch", isChecked).apply();
+            }
+        });
+
         doPermissionChecks();
 
         if (checkPrerequisites()) {
@@ -68,17 +99,22 @@ public class LaunchActivity extends AppCompatActivity {
             m_Transmitter = new BeaconTransmitter(this, new BeaconParser().setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
             m_Transmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
             m_Transmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
-            Beacon beacon = new Beacon.Builder()
+            m_Transmitter.setBeacon(new Beacon.Builder()
                     .setId1("2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6")
-                    .setId2("12345")
+                    .setId2(String.valueOf(new Random().nextInt(30000)))
                     .setId3("987")
                     .setManufacturer(0x0000) // Choose a number of 0x00ff or less as some devices cannot detect beacons with a manufacturer code > 0x00ff
                     .setTxPower(-59)
                     .setDataFields(Arrays.asList(new Long[]{0l}))
-                    .build();
+                    .build());
+        }
 
-            m_Transmitter.startAdvertising(beacon);
-            Toast.makeText(this, "Started transmitting", Toast.LENGTH_SHORT).show();
+        if (transmitSwitch.isChecked()) {
+            startTransmitting();
+        }
+
+        if (scanSwitch.isChecked()) {
+            startScanning();
         }
     }
 
@@ -213,6 +249,24 @@ public class LaunchActivity extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    public void startTransmitting() {
+        if (!m_Transmitter.isStarted())
+            m_Transmitter.startAdvertising();
+    }
+
+    public void stopTransmitting() {
+        if (m_Transmitter.isStarted())
+            m_Transmitter.stopAdvertising();
+    }
+
+    public void startScanning() {
+        m_Application.startScanning();
+    }
+
+    public void stopScanning() {
+        m_Application.stopScanning();
     }
 
     public void logToDisplay(final String s) {

@@ -4,24 +4,15 @@ import android.app.Application;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
-import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import org.altbeacon.beacon.AltBeacon;
-import org.altbeacon.beacon.AltBeaconParser;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.BeaconTransmitter;
 import org.altbeacon.beacon.Identifier;
-import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.powersave.BackgroundPowerSaver;
@@ -41,7 +32,9 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     private BackgroundPowerSaver m_PowerSaver;
     private BeaconManager m_BeaconManager;
     private boolean m_InsideActivity;
+    private boolean m_IsScanning = true;
     private LaunchActivity m_LaunchActivity;
+    private Region m_Region;
     private final HashMap<Identifier, Long> m_BeaconMap = new HashMap<>();
 
     @Override
@@ -86,9 +79,11 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         //startBackgroundMonitoring();
         //m_PowerSaver = new BackgroundPowerSaver(this);
         Log.d(TAG, "Begin monitoring");
-        Region region = new Region("com.cse190sc.BeaconTransmitter", Identifier.parse(ALTBEACON_ID), null, null);
-        m_RegionBootstrap = new RegionBootstrap(this, region);
+        m_Region = new Region("com.cse190sc.BeaconTransmitter", Identifier.parse(ALTBEACON_ID), null, null);
+        m_RegionBootstrap = new RegionBootstrap(this, m_Region);
         m_PowerSaver = new BackgroundPowerSaver(this);
+
+        stopScanning();
 
         new Thread(new Runnable() {
             @Override
@@ -137,6 +132,12 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     public void didExitRegion(Region region) {
         Log.d(TAG, "Went out of range of beacon with Id2 = " + region.getId2());
         logToDisplay("Went outside range");
+        try {
+            m_BeaconManager.stopRangingBeaconsInRegion(region);
+        }
+        catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -200,7 +201,6 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         }
     }
 
-
     public int getNumBeacons() {
         int size = 0;
 
@@ -209,5 +209,30 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         }
 
         return size;
+    }
+
+    public void startScanning() {
+        try {
+            if (!m_IsScanning) {
+                m_BeaconManager.startMonitoringBeaconsInRegion(m_Region);
+                m_IsScanning = true;
+            }
+        }
+        catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void stopScanning() {
+        try {
+            if (m_IsScanning) {
+                m_BeaconManager.stopMonitoringBeaconsInRegion(m_Region);
+                m_BeaconManager.stopRangingBeaconsInRegion(m_Region);
+                m_IsScanning = false;
+            }
+        }
+        catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -15,14 +15,32 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Transmitting"
+            android:textOn="On"
+            android:textOff="Off"
+            android:id="@+id/transmit_switch"
+            android:checked="false"/>
+
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scanning"
+            android:textOn="On"
+            android:textOff="Off"
+            android:id="@+id/scan_switch"
+            android:checked="false"/>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Hahaha, all your base are belong to us"
             android:id="@+id/launch_tv0"
-            android:layout_marginTop="100dp"
-            android:layout_gravity="center"/>
+            android:layout_marginTop="50dp"
+            />
 
         <TextView
             android:layout_width="wrap_content"
@@ -36,7 +54,8 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/beaconCounter"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="10dp"
+            android:text="Number of beacons: 0"/>
 
     </LinearLayout>
 </RelativeLayout>
