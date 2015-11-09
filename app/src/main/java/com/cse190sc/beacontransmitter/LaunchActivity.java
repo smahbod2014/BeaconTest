@@ -171,6 +171,7 @@ public class LaunchActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "LaunchActivity destroyed");
+        stopTransmitting();
     }
 
     //simply checks whether your device can transmit as a beacon
