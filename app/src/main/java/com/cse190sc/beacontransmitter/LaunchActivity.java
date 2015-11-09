@@ -25,6 +25,9 @@ import org.altbeacon.beacon.AltBeaconParser;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BeaconTransmitter;
+import org.w3c.dom.Text;
+
+import java.util.Arrays;
 
 public class LaunchActivity extends AppCompatActivity {
 
@@ -33,13 +36,16 @@ public class LaunchActivity extends AppCompatActivity {
     private BeaconTransmitterApplication m_Application;
     private BeaconTransmitter m_Transmitter;
     private SharedPreferences m_Prefs;
+    private TextView m_Log;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
         m_Application = (BeaconTransmitterApplication) this.getApplicationContext();
+        m_Application.setLaunchActivity(this);
         m_Prefs = this.getSharedPreferences("com.cse190sc.beacontransmitter", Context.MODE_PRIVATE);
+        m_Log = (TextView) findViewById(R.id.tv_log);
 
         boolean b = this.getIntent().getBooleanExtra("arrivedFromNotification", false);
         if (b) {
@@ -51,7 +57,25 @@ public class LaunchActivity extends AppCompatActivity {
             Log.d(TAG, "Opened app manually");
         }
 
+        if (checkPrerequisites()) {
+            // Sets up to transmit as an AltBeacon-style beacon.  If you wish to transmit as a different
+            // type of beacon, simply provide a different parser expression.  To find other parser expressions,
+            // for other beacon types, do a Google search for "setBeaconLayout" including the quotes
+            m_Transmitter = new BeaconTransmitter(this, new BeaconParser().setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
+            m_Transmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
+            m_Transmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
+            Beacon beacon = new Beacon.Builder()
+                    .setId1("2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6")
+                    .setId2("12345")
+                    .setId3("987")
+                    .setManufacturer(0x0000) // Choose a number of 0x00ff or less as some devices cannot detect beacons with a manufacturer code > 0x00ff
+                    .setTxPower(-59)
+                    .setDataFields(Arrays.asList(new Long[]{0l}))
+                    .build();
 
+            m_Transmitter.startAdvertising(beacon);
+            Toast.makeText(this, "Started transmitting", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -185,5 +209,14 @@ public class LaunchActivity extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    public void logToDisplay(final String s) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                m_Log.setText(s);
+            }
+        });
     }
 }

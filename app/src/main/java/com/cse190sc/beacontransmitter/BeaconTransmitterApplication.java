@@ -37,9 +37,8 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     private BackgroundPowerSaver m_PowerSaver;
     private BeaconManager m_BeaconManager;
     private boolean m_InsideActivity;
+    private LaunchActivity m_LaunchActivity;
 
-    //transmitter stuff
-    private BeaconTransmitter m_Transmitter;
 
     @Override
     public void onCreate() {
@@ -55,6 +54,7 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
                 if (collection.size() > 0) {
                     Beacon beacon = collection.iterator().next();
                     Log.i(TAG, "Beacon with id2 = " + beacon.getId2() + " is " + beacon.getDistance() + " meters away");
+                    logToDisplay("Beacon with id2 = " + beacon.getId2() + " is " + beacon.getDistance() + " meters away");
                 }
             }
         });
@@ -67,32 +67,14 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         m_RegionBootstrap = new RegionBootstrap(this, region);
         m_PowerSaver = new BackgroundPowerSaver(this);
 
-        //transmitter setup
-        BeaconParser parser = new AltBeaconParser();
-        //BeaconParser parser = new BeaconParser()
-        // setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25");
-        m_Transmitter = new BeaconTransmitter(this, parser);
-        m_Transmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
-        m_Transmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
 
-
-        AltBeacon.Builder builder = new AltBeacon.Builder();
-        builder.setId1("2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6");
-        builder.setId2("JOJO");
-        builder.setId3("DIO");
-        //builder.setMfgReserved(3);
-        builder.setManufacturer(0);
-        builder.setTxPower(-59);
-        m_Transmitter.setBeacon(builder.build());
-
-        startTransmitting();
     }
-
 
 
     @Override
     public void didEnterRegion(Region region) {
         Log.d(TAG, "I see a beacon!");
+        logToDisplay("I see a beacon!");
         try {
             m_BeaconManager.startRangingBeaconsInRegion(region);
         }
@@ -113,6 +95,7 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     @Override
     public void didExitRegion(Region region) {
         Log.d(TAG, "Went out of range of beacon with Id2 = " + region.getId2());
+        logToDisplay("Went outside range");
     }
 
     @Override
@@ -166,18 +149,12 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         notificationManager.notify(1, builder.build());
     }
 
-    public void startTransmitting() {
-        if (!m_Transmitter.isStarted()) {
-            m_Transmitter.startAdvertising();
-            Toast.makeText(this, "Started transmitting", Toast.LENGTH_SHORT).show();
-        }
+    public void setLaunchActivity(LaunchActivity activity) {
+        m_LaunchActivity = activity;
     }
 
-    public void stopTransmitting() {
-        if (m_Transmitter.isStarted()) {
-            m_Transmitter.stopAdvertising();
-            Toast.makeText(this, "Stopped transmitting", Toast.LENGTH_SHORT).show();
-        }
+    public void logToDisplay(String s) {
+        if (m_LaunchActivity != null)
+            m_LaunchActivity.logToDisplay(s);
     }
-
 }

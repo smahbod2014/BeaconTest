@@ -19,32 +19,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Welcome! What do you want to do?"
+            android:text="Hahaha, all your base are belong to us"
             android:id="@+id/launch_tv0"
             android:layout_marginTop="100dp"
             android:layout_gravity="center"/>
 
-        <Switch
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Transmitting"
-            android:id="@+id/launch_trans_switch"
-            android:checked="false"
-            android:layout_gravity="center"
-            android:layout_marginTop="50dp"
-            android:textOn="ON"
-            android:textOff="OFF"/>
-
-        <Switch
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Scanning"
-            android:id="@+id/launch_scan_switch"
-            android:checked="false"
-            android:layout_gravity="center"
-            android:layout_marginTop="10dp"
-            android:textOn="ON"
-            android:textOff="OFF"/>
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:id="@+id/tv_log"
+            android:layout_marginTop="30dp"/>
 
     </LinearLayout>
 </RelativeLayout>
