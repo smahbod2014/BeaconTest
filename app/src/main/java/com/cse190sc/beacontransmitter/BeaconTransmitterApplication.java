@@ -4,6 +4,7 @@ import android.app.Application;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
+import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
@@ -12,6 +13,8 @@ import android.util.Log;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.BeaconTransmitter;
 import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
@@ -20,8 +23,10 @@ import org.altbeacon.beacon.startup.BootstrapNotifier;
 import org.altbeacon.beacon.startup.RegionBootstrap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Random;
 
 public class BeaconTransmitterApplication extends Application implements BootstrapNotifier {
 
@@ -31,6 +36,7 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     private RegionBootstrap m_RegionBootstrap;
     private BackgroundPowerSaver m_PowerSaver;
     private BeaconManager m_BeaconManager;
+    private BeaconTransmitter m_Transmitter;
     private boolean m_InsideActivity;
     private boolean m_IsScanning = true;
     private LaunchActivity m_LaunchActivity;
@@ -84,6 +90,17 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         m_PowerSaver = new BackgroundPowerSaver(this);
 
         stopScanning();
+        m_Transmitter = new BeaconTransmitter(this, new BeaconParser().setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
+        m_Transmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
+        m_Transmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
+        m_Transmitter.setBeacon(new Beacon.Builder()
+                .setId1("2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6")
+                .setId2(String.valueOf(new Random().nextInt(30000)))
+                .setId3("987")
+                .setManufacturer(0x0000) // Choose a number of 0x00ff or less as some devices cannot detect beacons with a manufacturer code > 0x00ff
+                .setTxPower(-59)
+                .setDataFields(Arrays.asList(new Long[]{0l}))
+                .build());
 
         new Thread(new Runnable() {
             @Override
@@ -234,5 +251,9 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         catch (RemoteException e) {
             e.printStackTrace();
         }
+    }
+
+    public BeaconTransmitter getTransmitter() {
+        return m_Transmitter;
     }
 }

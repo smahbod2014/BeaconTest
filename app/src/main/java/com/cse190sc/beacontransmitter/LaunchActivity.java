@@ -96,17 +96,7 @@ public class LaunchActivity extends AppCompatActivity {
             // Sets up to transmit as an AltBeacon-style beacon.  If you wish to transmit as a different
             // type of beacon, simply provide a different parser expression.  To find other parser expressions,
             // for other beacon types, do a Google search for "setBeaconLayout" including the quotes
-            m_Transmitter = new BeaconTransmitter(this, new BeaconParser().setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
-            m_Transmitter.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
-            m_Transmitter.setAdvertiseTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
-            m_Transmitter.setBeacon(new Beacon.Builder()
-                    .setId1("2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6")
-                    .setId2(String.valueOf(new Random().nextInt(30000)))
-                    .setId3("987")
-                    .setManufacturer(0x0000) // Choose a number of 0x00ff or less as some devices cannot detect beacons with a manufacturer code > 0x00ff
-                    .setTxPower(-59)
-                    .setDataFields(Arrays.asList(new Long[]{0l}))
-                    .build());
+            m_Transmitter = m_Application.getTransmitter();
         }
 
         if (transmitSwitch.isChecked()) {
@@ -171,7 +161,7 @@ public class LaunchActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "LaunchActivity destroyed");
-        stopTransmitting();
+        //stopTransmitting();
     }
 
     //simply checks whether your device can transmit as a beacon
