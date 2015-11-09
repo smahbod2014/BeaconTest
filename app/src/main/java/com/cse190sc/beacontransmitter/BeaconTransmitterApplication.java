@@ -59,12 +59,24 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
                     StringBuilder sb = new StringBuilder();
                     for (Beacon beacon : collection) {
                         synchronized (m_BeaconMap) {
+                            //first time seeing this beacon
+                            if(m_BeaconMap.get(beacon.getId2()) == null) {
+                                //createNotification();
+                                if (m_InsideActivity) {
+                                    Log.d(TAG, "No need to send a notification, app is in foreground");
+                                }
+                                else {
+                                    Log.d(TAG, "Sending notification!");
+                                    createNotification();
+                                }
+                            }
                             m_BeaconMap.put(beacon.getId2(), System.currentTimeMillis());
                         }
                         sb.append("Beacon with id2 = " + beacon.getId2() + " is " + beacon.getDistance() + " meters away");
                         sb.append("\n");
                     }
                     logToDisplay(sb.toString());
+                    logNumBeacons();
                 }
             }
         });
@@ -94,6 +106,8 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
                         for (int i = 0; i < idsToRemove.size(); i++) {
                             m_BeaconMap.remove(idsToRemove.get(i));
                         }
+
+                        logNumBeacons();
                     }
 
                     try {
@@ -117,15 +131,6 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         catch (RemoteException e) {
             e.printStackTrace();
         }
-
-        //createNotification();
-        if (m_InsideActivity) {
-            Log.d(TAG, "No need to send a notification, app is in foreground");
-        }
-        else {
-            Log.d(TAG, "Sending notification!");
-            createNotification();
-        }
     }
 
     @Override
@@ -148,13 +153,6 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     public void setInsideActivity(boolean insideActivity) {
         m_InsideActivity = insideActivity;
         Log.d(TAG, "m_InsideActivity is now " + m_InsideActivity);
-    }
-
-    public void startBackgroundMonitoring() {
-
-    }
-
-    public void stopBackgroundMonitoring() {
     }
 
     /**
@@ -194,5 +192,22 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
     public void logToDisplay(String s) {
         if (m_LaunchActivity != null)
             m_LaunchActivity.logToDisplay(s);
+    }
+
+    public void logNumBeacons() {
+        if(m_LaunchActivity != null) {
+            m_LaunchActivity.logNumBeacons(Integer.toString(getNumBeacons()));
+        }
+    }
+
+
+    public int getNumBeacons() {
+        int size = 0;
+
+        synchronized (m_BeaconMap) {
+            size = m_BeaconMap.size();
+        }
+
+        return size;
     }
 }

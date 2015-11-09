@@ -37,12 +37,14 @@ public class LaunchActivity extends AppCompatActivity {
     private BeaconTransmitter m_Transmitter;
     private SharedPreferences m_Prefs;
     private TextView m_Log;
+    private TextView m_BeaconCounter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
         m_Log = (TextView) findViewById(R.id.tv_log);
+        m_BeaconCounter = (TextView) findViewById(R.id.beaconCounter);
         m_Application = (BeaconTransmitterApplication) this.getApplicationContext();
         m_Application.setLaunchActivity(this);
         m_Prefs = this.getSharedPreferences("com.cse190sc.beacontransmitter", Context.MODE_PRIVATE);
@@ -218,6 +220,15 @@ public class LaunchActivity extends AppCompatActivity {
             @Override
             public void run() {
                 m_Log.setText(s);
+            }
+        });
+    }
+
+    public void logNumBeacons(final String s) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                m_BeaconCounter.setText("Number of beacons: " + s);
             }
         });
     }
