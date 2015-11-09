@@ -21,24 +21,28 @@ import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BeaconTransmitter;
 import org.altbeacon.beacon.Identifier;
+import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.powersave.BackgroundPowerSaver;
 import org.altbeacon.beacon.startup.BootstrapNotifier;
 import org.altbeacon.beacon.startup.RegionBootstrap;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 public class BeaconTransmitterApplication extends Application implements BootstrapNotifier {
 
     private static final String TAG = "BeaconTransmitterApp";
     private static final String ALTBEACON_ID = "2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6";
+    private static final long TIMEOUT = 10l * 1000l;
     private RegionBootstrap m_RegionBootstrap;
     private BackgroundPowerSaver m_PowerSaver;
     private BeaconManager m_BeaconManager;
     private boolean m_InsideActivity;
     private LaunchActivity m_LaunchActivity;
-
+    private final HashMap<Identifier, Long> m_BeaconMap = new HashMap<>();
 
     @Override
     public void onCreate() {
@@ -52,12 +56,19 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
             @Override
             public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
                 if (collection.size() > 0) {
-                    Beacon beacon = collection.iterator().next();
-                    Log.i(TAG, "Beacon with id2 = " + beacon.getId2() + " is " + beacon.getDistance() + " meters away");
-                    logToDisplay("Beacon with id2 = " + beacon.getId2() + " is " + beacon.getDistance() + " meters away");
+                    StringBuilder sb = new StringBuilder();
+                    for (Beacon beacon : collection) {
+                        synchronized (m_BeaconMap) {
+                            m_BeaconMap.put(beacon.getId2(), System.currentTimeMillis());
+                        }
+                        sb.append("Beacon with id2 = " + beacon.getId2() + " is " + beacon.getDistance() + " meters away");
+                        sb.append("\n");
+                    }
+                    logToDisplay(sb.toString());
                 }
             }
         });
+
 
         //wake up the app when any beacon is seen
         //startBackgroundMonitoring();
@@ -67,7 +78,32 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
         m_RegionBootstrap = new RegionBootstrap(this, region);
         m_PowerSaver = new BackgroundPowerSaver(this);
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    synchronized (m_BeaconMap) {
+                        ArrayList<Identifier> idsToRemove = new ArrayList<>();
+                        for (Identifier id : m_BeaconMap.keySet()) {
+                            Long time = m_BeaconMap.get(id);
+                            if (System.currentTimeMillis() - time >= TIMEOUT) {
+                                idsToRemove.add(id);
+                            }
+                        }
 
+                        for (int i = 0; i < idsToRemove.size(); i++) {
+                            m_BeaconMap.remove(idsToRemove.get(i));
+                        }
+                    }
+
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 
 
@@ -151,6 +187,8 @@ public class BeaconTransmitterApplication extends Application implements Bootstr
 
     public void setLaunchActivity(LaunchActivity activity) {
         m_LaunchActivity = activity;
+        Log.d(TAG, "Launch activity has been set!");
+        logToDisplay("Launch activity set");
     }
 
     public void logToDisplay(String s) {

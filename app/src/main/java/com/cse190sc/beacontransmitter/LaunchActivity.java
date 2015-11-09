@@ -42,10 +42,10 @@ public class LaunchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
+        m_Log = (TextView) findViewById(R.id.tv_log);
         m_Application = (BeaconTransmitterApplication) this.getApplicationContext();
         m_Application.setLaunchActivity(this);
         m_Prefs = this.getSharedPreferences("com.cse190sc.beacontransmitter", Context.MODE_PRIVATE);
-        m_Log = (TextView) findViewById(R.id.tv_log);
 
         boolean b = this.getIntent().getBooleanExtra("arrivedFromNotification", false);
         if (b) {
@@ -56,6 +56,8 @@ public class LaunchActivity extends AppCompatActivity {
             Toast.makeText(this, "Opened app manually", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Opened app manually");
         }
+
+        doPermissionChecks();
 
         if (checkPrerequisites()) {
             // Sets up to transmit as an AltBeacon-style beacon.  If you wish to transmit as a different
